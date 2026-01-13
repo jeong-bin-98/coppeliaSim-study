@@ -23,7 +23,7 @@ class Coppeliasim_client:
             return False
 
     def initialize_handles(self):
-        """Joint와 TCP 핸들을 찾아서 클래스 변수에 저장"""
+        # Joint와 TCP 핸들을 찾아서 클래스 변수에 저장
         self.joint_handles = []
         joint_names = [f"UR3_joint{i}" for i in range(1, 7)]
 
@@ -51,10 +51,8 @@ class Coppeliasim_client:
             sim.simxGetObjectPosition(self.client_id, self.tcp_handle, -1, simConst.simx_opmode_streaming)
 
     def get_data_synchronized(self):
-        """
-        [핵심] Pause + Buffer로 동기화된 데이터 가져오기
-        반환값: (joint_angles, tcp_position_world)
-        """
+        """ 반환값: (joint_angles, tcp_position_world) """
+        
         # 1. 통신 일시 정지 (스냅샷)
         sim.simxPauseCommunication(self.client_id, True)
 

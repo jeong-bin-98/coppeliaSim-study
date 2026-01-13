@@ -18,10 +18,9 @@ class HT_matrix:
         self.dh_a     = self.parse_dh_param(os.getenv("DH_A"))
         self.dh_alpha = self.parse_dh_param(os.getenv("DH_ALPHA"))
         
-        # [180도 회전 행렬] World 좌표계 보정 (X->-X, Y->-Y)
         self.T_base_to_world = np.array([
             [ 0,  1,  0,  0],  # Base의 Y가 World의 X가 됨
-            [-1,  0,  0,  0],  # Base의 X가 World의 -Y가 됨 (오른손 법칙)
+            [-1,  0,  0,  0],  # Base의 X가 World의 -Y가 됨
             [ 0,  0,  1,  0],  # Z는 그대로
             [ 0,  0,  0,  1]
         ])
@@ -44,7 +43,7 @@ class HT_matrix:
         ])
 
     def ForwardKinematics(self, joint_angles):
-        # [각도 보정] UR3 Standard -> CoppeliaSim
+        # 각도 보정
         theta = [
             joint_angles[0],
             joint_angles[1] - math.pi/2, 
@@ -84,18 +83,19 @@ def main():
     try:
         while True:
             # --- 3. 데이터 획득 (Synchronized) ---
-	        # 관절 각도와 실제 TCP 위치(정답지)를 동시에 가져옴
+	        # 관절 각도와 실제 TCP 위치를 동시에 가져옴
             angles, sim_tcp_world = client.get_data_synchronized()
 
             # 데이터가 아직 안 들어왔으면 건너뜀 (Safety)
-            if len(angles) != 6: continue 
+            if len(angles) != 6: 
+                continue 
 
-            # --- 4. 정기구학 계산 (Calculation) ---
+            # --- 4. 정기구학 계산 ---
             kinematics.ForwardKinematics(angles)
             my_tcp_world = kinematics.get_position() # 내가 계산한 좌표
             
-            # --- 5. 검증 및 오차 계산 (Verification) ---
-	        # 시뮬레이터 값 vs 내 계산 값 거리 차이 (Euclidean Distance)
+            # --- 5. 검증 및 오차 계산 ---
+	        # 시뮬레이터 값 vs 내 계산 값 거리 차이
             error = np.linalg.norm(my_tcp_world - np.array(sim_tcp_world))
 
             # 결과 출력
@@ -104,14 +104,14 @@ def main():
             print(f"Sim TCP(World): X={sim_tcp_world[0]:.4f}, Y={sim_tcp_world[1]:.4f}, Z={sim_tcp_world[2]:.4f}")
             print(f"Error         : {error:.5f} m")
 
-            # 루프 속도 조절 (너무 빠르면 보기 힘드니 약간 지연, 제어 시엔 제거 가능)
+            # 루프 속도 조절
             time.sleep(0.5) 
 
     except KeyboardInterrupt:
         print("\n>> 종료 요청 받음.")
     
     finally:
-        # --- 6. 안전 종료 (Graceful Shutdown) ---
+        # --- 6. 안전 종료 ---
         sim.simxStopSimulation(client.client_id, simConst.simx_opmode_blocking)
         sim.simxFinish(client.client_id)
         print(">> Remote API 연결 종료")
