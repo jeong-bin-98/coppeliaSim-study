@@ -28,7 +28,7 @@ running = True
 
 # 보간 설정
 INTERPOLATION_SPEED = 0.5  # m/s (초당 이동 거리)
-LOOP_INTERVAL = 0.05       # 루프 주기 (초)
+LOOP_INTERVAL = 0.025      # 루프 주기 (초) - 40Hz (시뮬레이션 20Hz의 2배)
 
 def lerp_target(current, goal, max_step):
     """
